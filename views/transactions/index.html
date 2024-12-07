@@ -20,7 +20,7 @@
                 onclick="addToCart({{.ID}}, '{{.Name}}', {{.Price}})">
                 <h3 class="font-medium text-gray-900">{{.Name}}</h3>
                 <p class="text-gray-600">Stock: {{.Stock}}</p>
-                <p class="text-indigo-600 font-medium">{{.Price}}</p>
+                <p class="text-indigo-600 font-medium">Rp {{.Price}}</p>
             </div>
             {{end}}
         </div>
@@ -31,14 +31,14 @@
         <h2 class="text-xl font-bold text-gray-900 mb-6">Cart</h2>
         <div id="cart">
             <div class="space-y-4">
-                <div id="cart-items">
+                <div id="cart-items" class="space-y-2">
                     <!-- Cart items will be dynamically added here -->
                 </div>
 
                 <div class="border-t pt-4">
                     <div class="flex justify-between text-lg font-medium">
                         <span>Total:</span>
-                        <span id="cart-total">0</span>
+                        <span>Rp <span id="cart-total">0</span></span>
                     </div>
                 </div>
 
@@ -60,7 +60,7 @@
 
                     <div class="flex justify-between text-lg font-medium text-green-600">
                         <span>Change:</span>
-                        <span id="change-amount">0</span>
+                        <span>Rp <span id="change-amount">0</span></span>
                     </div>
                 </div>
 
@@ -106,7 +106,7 @@
             <div class="flex justify-between items-center p-2 border rounded">
                 <div>
                     <h4 class="font-medium">${item.name}</h4>
-                    <p class="text-sm text-gray-600">${item.price} x ${item.quantity}</p>
+                    <p class="text-sm text-gray-600">Rp ${item.price} x ${item.quantity}</p>
                 </div>
                 <div class="flex items-center space-x-2">
                     <button onclick="updateQuantity(${item.id}, -1)" class="text-gray-600 hover:text-gray-900">-</button>
@@ -169,6 +169,22 @@
         })
         .catch(error => {
             alert('Error processing transaction');
+            console.error('Error:', error);
         });
     }
+
+    // Load initial products
+    fetch('/api/products')
+        .then(response => response.json())
+        .then(data => {
+            const productList = document.getElementById('product-list');
+            productList.innerHTML = data.data.map(product => `
+                <div class="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                    onclick="addToCart(${product.id}, '${product.name}', ${product.price})">
+                    <h3 class="font-medium text-gray-900">${product.name}</h3>
+                    <p class="text-gray-600">Stock: ${product.stock}</p>
+                    <p class="text-indigo-600 font-medium">Rp ${product.price}</p>
+                </div>
+            `).join('');
+        });
 </script> 

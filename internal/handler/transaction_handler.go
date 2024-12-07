@@ -12,12 +12,29 @@ import (
 
 type TransactionHandler struct {
 	transactionService service.TransactionService
+	productService     service.ProductService
 }
 
-func NewTransactionHandler(transactionService service.TransactionService) *TransactionHandler {
+func NewTransactionHandler(transactionService service.TransactionService, productService service.ProductService) *TransactionHandler {
 	return &TransactionHandler{
 		transactionService: transactionService,
+		productService:     productService,
 	}
+}
+
+func (h *TransactionHandler) ShowTransactionPage(c *fiber.Ctx) error {
+	// Get initial products for the transaction page
+	products, _, err := h.productService.GetProducts(1, 100, "")
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
+
+	return c.Render("transactions/index", fiber.Map{
+		"Title":    "New Transaction",
+		"Products": products,
+	}, "layouts/main")
 }
 
 func (h *TransactionHandler) GetTransactions(c *fiber.Ctx) error {

@@ -16,16 +16,30 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// Define the subtract function
+func subtract(a, b int) int {
+	return a - b
+}
+
+// Define the addx function
+func addx(a, b int) int {
+	return a + b
+}
+
 func main() {
 	if err := godotenv.Load(); err != nil {
-		log.Fatal("Error loading .env file")
+		log.Println("Warning: .env file not found, using default environment variables")
 	}
 
 	// Initialize database
 	config.ConnectDB()
 
-	// Setup template engine
+	// Create a new HTML template engine
 	engine := html.New("../views", ".html")
+
+	// Register the subtract and addx functions with the template engine
+	engine.AddFunc("subtract", subtract)
+	engine.AddFunc("addx", addx)
 
 	app := fiber.New(fiber.Config{
 		Views: engine,
@@ -48,7 +62,7 @@ func main() {
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService)
 	productHandler := handler.NewProductHandler(productService)
-	transactionHandler := handler.NewTransactionHandler(transactionService)
+	transactionHandler := handler.NewTransactionHandler(transactionService, productService)
 
 	setupRoutes(app, authHandler, productHandler, transactionHandler)
 
@@ -79,11 +93,7 @@ func setupRoutes(app *fiber.App,
 		}, "layouts/main")
 	})
 
-	app.Get("/transactions", func(c *fiber.Ctx) error {
-		return c.Render("transactions/index", fiber.Map{
-			"Title": "Transactions",
-		}, "layouts/main")
-	})
+	app.Get("/transactions", transactionHandler.ShowTransactionPage)
 
 	app.Get("/reports", func(c *fiber.Ctx) error {
 		return c.Render("reports/index", fiber.Map{

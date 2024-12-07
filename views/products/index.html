@@ -59,19 +59,23 @@
             Showing {{.Meta.Page}} of {{.Meta.TotalPages}} pages
         </div>
         <div class="flex space-x-2">
-            {{if gt .Meta.Page 1}}
-            <button hx-get="/api/products?page={{subtract .Meta.Page 1}}" 
-                    hx-target="#products-table"
-                    class="px-3 py-1 border rounded text-sm">
-                Previous
-            </button>
-            {{end}}
-            {{if lt .Meta.Page .Meta.TotalPages}}
-            <button hx-get="/api/products?page={{add .Meta.Page 1}}" 
-                    hx-target="#products-table"
-                    class="px-3 py-1 border rounded text-sm">
-                Next
-            </button>
+            {{if .Meta}}
+                {{if gt .Meta.Page 1}}
+                <button hx-get="/api/products?page={{subtract .Meta.Page 1}}" 
+                        hx-target="#products-table"
+                        class="px-3 py-1 border rounded text-sm">
+                    Previous
+                </button>
+                {{end}}
+                {{if lt .Meta.Page .Meta.TotalPages}}
+                <button hx-get="/api/products?page={{addx .Meta.Page 1}}" 
+                        hx-target="#products-table"
+                        class="px-3 py-1 border rounded text-sm">
+                    Next
+                </button>
+                {{end}}
+            {{else}}
+                <p>Error: Pagination data is missing.</p>
             {{end}}
         </div>
     </div>

@@ -31,12 +31,15 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 		})
 	}
 
+	totalPages := (total + int64(limit) - 1) / int64(limit)
+
 	return c.JSON(fiber.Map{
 		"data": products,
 		"meta": fiber.Map{
-			"page":  page,
-			"limit": limit,
-			"total": total,
+			"page":       page,
+			"limit":      limit,
+			"total":      total,
+			"totalPages": totalPages,
 		},
 	})
 }
