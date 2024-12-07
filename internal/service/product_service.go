@@ -24,6 +24,12 @@ func NewProductService(productRepo repository.ProductRepository) ProductService 
 }
 
 func (s *productService) GetProducts(page, limit int, search string) ([]domain.Product, int64, error) {
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 {
+		limit = 10
+	}
 	return s.productRepo.GetProducts(page, limit, search)
 }
 

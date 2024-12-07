@@ -37,6 +37,7 @@ func (s *userService) Login(username, password string) (string, error) {
 	}
 
 	claims := jwt.MapClaims{
+		"user_id":  user.ID,
 		"username": user.Username,
 		"role":     user.Role,
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),

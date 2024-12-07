@@ -1,6 +1,8 @@
 package middleware
 
 import (
+	"os"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -15,7 +17,7 @@ func Protected() fiber.Handler {
 		}
 
 		token, err := jwt.Parse(cookie, func(token *jwt.Token) (interface{}, error) {
-			return []byte("your-secret-key"), nil // TODO: Use env variable
+			return []byte(os.Getenv("JWT_SECRET_KEY")), nil
 		})
 
 		if err != nil || !token.Valid {
@@ -27,6 +29,7 @@ func Protected() fiber.Handler {
 		claims := token.Claims.(jwt.MapClaims)
 		c.Locals("username", claims["username"])
 		c.Locals("role", claims["role"])
+		c.Locals("userID", uint(claims["user_id"].(float64)))
 
 		return c.Next()
 	}

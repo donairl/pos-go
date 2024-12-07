@@ -27,19 +27,30 @@ func (r *productRepository) GetProducts(page, limit int, search string) ([]domai
 	var total int64
 
 	query := r.db.Model(&domain.Product{})
+
+	// Apply search filter if provided
 	if search != "" {
 		query = query.Where("name ILIKE ?", "%"+search+"%")
 	}
 
-	err := query.Count(&total).Error
-	if err != nil {
+	// Get total count before pagination
+	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
+	// Apply pagination
 	offset := (page - 1) * limit
-	err = query.Offset(offset).Limit(limit).Find(&products).Error
-	if err != nil {
+	if err := query.Offset(offset).Limit(limit).Find(&products).Error; err != nil {
 		return nil, 0, err
+	}
+
+	// Debug log
+	if len(products) == 0 {
+		// Try to get all products without pagination to check if there's any data
+		var allProducts []domain.Product
+		if err := r.db.Model(&domain.Product{}).Find(&allProducts).Error; err != nil {
+			return nil, 0, err
+		}
 	}
 
 	return products, total, nil
@@ -47,8 +58,7 @@ func (r *productRepository) GetProducts(page, limit int, search string) ([]domai
 
 func (r *productRepository) GetProductByID(id uint) (*domain.Product, error) {
 	var product domain.Product
-	err := r.db.First(&product, id).Error
-	if err != nil {
+	if err := r.db.First(&product, id).Error; err != nil {
 		return nil, err
 	}
 	return &product, nil

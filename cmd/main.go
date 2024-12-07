@@ -87,12 +87,7 @@ func setupRoutes(app *fiber.App,
 	})
 
 	// View routes
-	app.Get("/products", func(c *fiber.Ctx) error {
-		return c.Render("products/index", fiber.Map{
-			"Title": "Products",
-		}, "layouts/main")
-	})
-
+	app.Get("/products", productHandler.GetProducts)
 	app.Get("/transactions", transactionHandler.ShowTransactionPage)
 
 	app.Get("/reports", func(c *fiber.Ctx) error {

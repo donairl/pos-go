@@ -41,6 +41,8 @@ func ConnectDB() {
 
 	// Seed default admin user
 	seedAdminUser()
+	// Seed test products
+	seedTestProducts()
 }
 
 func seedAdminUser() {
@@ -62,5 +64,36 @@ func seedAdminUser() {
 			log.Fatal("Failed to create admin user:", err)
 		}
 		log.Println("Default admin user created successfully")
+	}
+}
+
+func seedTestProducts() {
+	var count int64
+	DB.Model(&domain.Product{}).Count(&count)
+	if count == 0 {
+		testProducts := []domain.Product{
+			{
+				Name:  "Product 1",
+				Price: 10000,
+				Stock: 100,
+			},
+			{
+				Name:  "Product 2",
+				Price: 20000,
+				Stock: 50,
+			},
+			{
+				Name:  "Product 3",
+				Price: 15000,
+				Stock: 75,
+			},
+		}
+
+		for _, product := range testProducts {
+			if err := DB.Create(&product).Error; err != nil {
+				log.Printf("Failed to create test product %s: %v", product.Name, err)
+			}
+		}
+		log.Println("Test products created successfully")
 	}
 }
