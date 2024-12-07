@@ -1,0 +1,43 @@
+pos-system/
+├── cmd/
+│   └── main.go
+├── config/
+│   └── config.go
+├── internal/
+│   ├── domain/
+│   │   ├── product.go
+│   │   ├── transaction.go
+│   │   └── user.go
+│   ├── handler/
+│   │   ├── product_handler.go
+│   │   ├── transaction_handler.go
+│   │   └── user_handler.go
+│   ├── repository/
+│   │   ├── product_repository.go
+│   │   ├── transaction_repository.go
+│   │   └── user_repository.go
+│   └── service/
+│       ├── product_service.go
+│       ├── transaction_service.go
+│       └── user_service.go
+├── migrations/
+│   └── schema.sql
+├── views/
+│   ├── layouts/
+│   │   └── main.html
+│   ├── products/
+│   │   ├── index.html
+│   │   └── form.html
+│   ├── transactions/
+│   │   ├── index.html
+│   │   └── cart.html
+│   └── users/
+│       ├── login.html
+│       └── register.html
+├── public/
+│   ├── css/
+│   │   └── style.css
+│   └── js/
+│       └── app.js
+├── go.mod
+└── .env 
