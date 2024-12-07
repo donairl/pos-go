@@ -55,18 +55,21 @@ func main() {
 	userRepo := repository.NewUserRepository(config.DB)
 	productRepo := repository.NewProductRepository(config.DB)
 	transactionRepo := repository.NewTransactionRepository(config.DB)
+	categoryRepo := repository.NewCategoryRepository(config.DB)
 
 	// Initialize services
 	userService := service.NewUserService(userRepo)
 	productService := service.NewProductService(productRepo)
 	transactionService := service.NewTransactionService(transactionRepo)
+	categoryService := service.NewCategoryService(categoryRepo)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService)
 	productHandler := handler.NewProductHandler(productService)
 	transactionHandler := handler.NewTransactionHandler(transactionService, productService)
+	categoryHandler := handler.NewCategoryHandler(categoryService)
 
-	setupRoutes(app, authHandler, productHandler, transactionHandler)
+	setupRoutes(app, authHandler, productHandler, transactionHandler, categoryHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -79,7 +82,8 @@ func main() {
 func setupRoutes(app *fiber.App,
 	authHandler *handler.AuthHandler,
 	productHandler *handler.ProductHandler,
-	transactionHandler *handler.TransactionHandler) {
+	transactionHandler *handler.TransactionHandler,
+	categoryHandler *handler.CategoryHandler) {
 
 	// Public routes
 	app.Get("/", func(c *fiber.Ctx) error {
@@ -90,6 +94,7 @@ func setupRoutes(app *fiber.App,
 
 	// View routes
 	app.Get("/products", productHandler.GetProducts)
+	app.Get("/categories", categoryHandler.ShowCategories)
 	app.Get("/transactions", transactionHandler.ShowTransactionPage)
 
 	app.Get("/reports", func(c *fiber.Ctx) error {
@@ -106,6 +111,14 @@ func setupRoutes(app *fiber.App,
 
 	// Protected API routes
 	api := app.Group("/api", middleware.Protected())
+
+	// Category routes
+	categories := api.Group("/categories")
+	categories.Get("/", categoryHandler.GetCategories)
+	categories.Post("/", categoryHandler.CreateCategory)
+	categories.Get("/:id", categoryHandler.GetCategory)
+	categories.Put("/:id", categoryHandler.UpdateCategory)
+	categories.Delete("/:id", categoryHandler.DeleteCategory)
 
 	// Product routes
 	products := api.Group("/products")

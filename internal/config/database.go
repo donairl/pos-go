@@ -6,7 +6,6 @@ import (
 	"os"
 	"pos-go/internal/domain"
 
-	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -14,8 +13,8 @@ import (
 var DB *gorm.DB
 
 func ConnectDB() {
-	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta",
+	var err error
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
 		os.Getenv("DB_HOST"),
 		os.Getenv("DB_USER"),
 		os.Getenv("DB_PASSWORD"),
@@ -23,77 +22,93 @@ func ConnectDB() {
 		os.Getenv("DB_PORT"),
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatal("Failed to connect to database:", err)
+		log.Fatal("Failed to connect to database. \n", err)
 	}
 
-	// Auto Migrate the schemas
-	db.AutoMigrate(
-		&domain.User{},
-		&domain.Product{},
-		&domain.Transaction{},
-		&domain.TransactionItem{},
-	)
+	log.Println("Connected Successfully to Database")
 
-	DB = db
-	log.Println("Database connected successfully")
+	// Auto Migrate the models
+	DB.AutoMigrate(&domain.User{}, &domain.Category{}, &domain.Product{}, &domain.Transaction{}, &domain.TransactionItem{})
 
-	// Seed default admin user
-	seedAdminUser()
-	// Seed test products
-	seedTestProducts()
+	// Seed the database
+	seedDatabase()
 }
 
-func seedAdminUser() {
-	var user domain.User
-	if err := DB.Where("username = ?", "admin").First(&user).Error; err != nil {
-		// User doesn't exist, create it
-		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin4321"), bcrypt.DefaultCost)
-		if err != nil {
-			log.Fatal("Failed to hash password:", err)
-		}
-
-		adminUser := domain.User{
+func seedDatabase() {
+	// Seed admin user if it doesn't exist
+	var adminUser domain.User
+	if err := DB.Where("username = ?", "admin").First(&adminUser).Error; err != nil {
+		adminUser = domain.User{
 			Username: "admin",
-			Password: string(hashedPassword),
-			Role:     domain.RoleAdmin,
+			Password: "$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa", // admin4321
+			Role:     "admin",
 		}
-
-		if err := DB.Create(&adminUser).Error; err != nil {
-			log.Fatal("Failed to create admin user:", err)
-		}
-		log.Println("Default admin user created successfully")
+		DB.Create(&adminUser)
 	}
-}
 
-func seedTestProducts() {
-	var count int64
-	DB.Model(&domain.Product{}).Count(&count)
-	if count == 0 {
-		testProducts := []domain.Product{
+	// Seed default categories if they don't exist
+	categories := []domain.Category{
+		{Name: "Electronics"},
+		{Name: "Food & Beverages"},
+		{Name: "Clothing"},
+		{Name: "Books"},
+		{Name: "Others"},
+	}
+
+	for _, category := range categories {
+		var existingCategory domain.Category
+		if err := DB.Where("name = ?", category.Name).First(&existingCategory).Error; err != nil {
+			DB.Create(&category)
+		}
+	}
+
+	// Seed test products if they don't exist
+	var productCount int64
+	DB.Model(&domain.Product{}).Count(&productCount)
+	if productCount == 0 {
+		// Get the "Electronics" category
+		var electronicsCategory domain.Category
+		DB.Where("name = ?", "Electronics").First(&electronicsCategory)
+		var foodCategory domain.Category
+		DB.Where("name = ?", "Food & Beverages").First(&foodCategory)
+
+		products := []domain.Product{
 			{
-				Name:  "Product 1",
-				Price: 10000,
-				Stock: 100,
+				Name:       "Laptop",
+				Price:      999.99,
+				Stock:      10,
+				CategoryID: electronicsCategory.ID,
 			},
 			{
-				Name:  "Product 2",
-				Price: 20000,
-				Stock: 50,
+				Name:       "Smartphone",
+				Price:      499.99,
+				Stock:      20,
+				CategoryID: electronicsCategory.ID,
 			},
 			{
-				Name:  "Product 3",
-				Price: 15000,
-				Stock: 75,
+				Name:       "Tablet",
+				Price:      299.99,
+				Stock:      15,
+				CategoryID: electronicsCategory.ID,
+			},
+			{
+				Name:       "Orange Juice",
+				Price:      2.29,
+				Stock:      50,
+				CategoryID: foodCategory.ID,
+			},
+			{
+				Name:       "Mineral Water ABC",
+				Price:      1.99,
+				Stock:      100,
+				CategoryID: foodCategory.ID,
 			},
 		}
 
-		for _, product := range testProducts {
-			if err := DB.Create(&product).Error; err != nil {
-				log.Printf("Failed to create test product %s: %v", product.Name, err)
-			}
+		for _, product := range products {
+			DB.Create(&product)
 		}
-		log.Println("Test products created successfully")
 	}
 }
