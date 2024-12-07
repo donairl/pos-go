@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"strconv"
 
 	"pos-go/internal/domain"
@@ -33,15 +34,17 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 
 	totalPages := (total + int64(limit) - 1) / int64(limit)
 
-	return c.JSON(fiber.Map{
-		"data": products,
-		"meta": fiber.Map{
-			"page":       page,
-			"limit":      limit,
-			"total":      total,
-			"totalPages": totalPages,
+	log.Printf("Page: %d, Limit: %d, Total: %d, TotalPages: %d", page, limit, total, totalPages)
+
+	return c.Render("products/index", fiber.Map{
+		"Products": products,
+		"Meta": fiber.Map{
+			"Page":       page,
+			"Limit":      limit,
+			"Total":      total,
+			"TotalPages": totalPages,
 		},
-	})
+	}, "layouts/main")
 }
 
 func (h *ProductHandler) GetProduct(c *fiber.Ctx) error {
