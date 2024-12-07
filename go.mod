@@ -1,4 +1,4 @@
-module github.com/yourusername/pos-system
+module pos-go
 
 go 1.21
 
