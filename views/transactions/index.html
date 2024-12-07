@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Product Selection -->
+    <div class="md:col-span-2 bg-white shadow rounded-lg p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold text-gray-900">Products</h2>
+            <div class="relative">
+                <input type="text" 
+                    placeholder="Search products..." 
+                    class="w-64 px-4 py-2 border rounded-md"
+                    hx-get="/api/products/search"
+                    hx-trigger="keyup changed delay:500ms"
+                    hx-target="#product-list">
+            </div>
+        </div>
+
+        <div id="product-list" class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {{range .Products}}
+            <div class="border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                onclick="addToCart({{.ID}}, '{{.Name}}', {{.Price}})">
+                <h3 class="font-medium text-gray-900">{{.Name}}</h3>
+                <p class="text-gray-600">Stock: {{.Stock}}</p>
+                <p class="text-indigo-600 font-medium">{{.Price}}</p>
+            </div>
+            {{end}}
+        </div>
+    </div>
+
+    <!-- Cart -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-xl font-bold text-gray-900 mb-6">Cart</h2>
+        <div id="cart">
+            <div class="space-y-4">
+                <div id="cart-items">
+                    <!-- Cart items will be dynamically added here -->
+                </div>
+
+                <div class="border-t pt-4">
+                    <div class="flex justify-between text-lg font-medium">
+                        <span>Total:</span>
+                        <span id="cart-total">0</span>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Payment Method</label>
+                        <select id="payment-method" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                            <option value="cash">Cash</option>
+                            <option value="card">Card</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Payment Amount</label>
+                        <input type="number" id="payment-amount" 
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+                            onchange="calculateChange()">
+                    </div>
+
+                    <div class="flex justify-between text-lg font-medium text-green-600">
+                        <span>Change:</span>
+                        <span id="change-amount">0</span>
+                    </div>
+                </div>
+
+                <button onclick="processTransaction()" 
+                    class="w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+                    Process Transaction
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let cart = [];
+    let total = 0;
+
+    function addToCart(id, name, price) {
+        const existingItem = cart.find(item => item.id === id);
+        if (existingItem) {
+            existingItem.quantity++;
+        } else {
+            cart.push({ id, name, price, quantity: 1 });
+        }
+        updateCart();
+    }
+
+    function removeFromCart(id) {
+        cart = cart.filter(item => item.id !== id);
+        updateCart();
+    }
+
+    function updateQuantity(id, delta) {
+        const item = cart.find(item => item.id === id);
+        if (item) {
+            item.quantity = Math.max(1, item.quantity + delta);
+            updateCart();
+        }
+    }
+
+    function updateCart() {
+        const cartItems = document.getElementById('cart-items');
+        cartItems.innerHTML = cart.map(item => `
+            <div class="flex justify-between items-center p-2 border rounded">
+                <div>
+                    <h4 class="font-medium">${item.name}</h4>
+                    <p class="text-sm text-gray-600">${item.price} x ${item.quantity}</p>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button onclick="updateQuantity(${item.id}, -1)" class="text-gray-600 hover:text-gray-900">-</button>
+                    <span>${item.quantity}</span>
+                    <button onclick="updateQuantity(${item.id}, 1)" class="text-gray-600 hover:text-gray-900">+</button>
+                    <button onclick="removeFromCart(${item.id})" class="text-red-600 hover:text-red-900 ml-2">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+
+        total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+        document.getElementById('cart-total').textContent = total.toFixed(2);
+        calculateChange();
+    }
+
+    function calculateChange() {
+        const paymentAmount = parseFloat(document.getElementById('payment-amount').value) || 0;
+        const change = paymentAmount - total;
+        document.getElementById('change-amount').textContent = change.toFixed(2);
+    }
+
+    function processTransaction() {
+        if (cart.length === 0) {
+            alert('Cart is empty');
+            return;
+        }
+
+        const paymentAmount = parseFloat(document.getElementById('payment-amount').value);
+        if (!paymentAmount || paymentAmount < total) {
+            alert('Invalid payment amount');
+            return;
+        }
+
+        const transaction = {
+            items: cart.map(item => ({
+                product_id: item.id,
+                quantity: item.quantity,
+                price: item.price
+            })),
+            total: total,
+            payment_amount: paymentAmount,
+            payment_method: document.getElementById('payment-method').value
+        };
+
+        fetch('/api/transactions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(transaction)
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert('Transaction completed successfully');
+            cart = [];
+            updateCart();
+            document.getElementById('payment-amount').value = '';
+        })
+        .catch(error => {
+            alert('Error processing transaction');
+        });
+    }
+</script> 

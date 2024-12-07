@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<div class="bg-white shadow rounded-lg p-6">
+    <div class="flex justify-between items-center mb-6">
+        <h1 class="text-2xl font-bold text-gray-900">Products</h1>
+        <button onclick="showAddModal()" class="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">
+            <i class="fas fa-plus mr-2"></i>Add Product
+        </button>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="mb-6">
+        <div class="flex gap-4">
+            <div class="flex-1">
+                <input type="text" 
+                    name="search" 
+                    placeholder="Search products..." 
+                    class="w-full px-4 py-2 border rounded-md"
+                    hx-get="/api/products"
+                    hx-trigger="keyup changed delay:500ms"
+                    hx-target="#products-table">
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200" id="products-table">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {{range .Products}}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap">{{.Name}}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{.Price}}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">{{.Stock}}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <button onclick="showEditModal({{.ID}})" class="text-indigo-600 hover:text-indigo-900 mr-3">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteProduct({{.ID}})" class="text-red-600 hover:text-red-900">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="mt-4 flex justify-between items-center">
+        <div class="text-sm text-gray-700">
+            Showing {{.Meta.Page}} of {{.Meta.TotalPages}} pages
+        </div>
+        <div class="flex space-x-2">
+            {{if gt .Meta.Page 1}}
+            <button hx-get="/api/products?page={{subtract .Meta.Page 1}}" 
+                    hx-target="#products-table"
+                    class="px-3 py-1 border rounded text-sm">
+                Previous
+            </button>
+            {{end}}
+            {{if lt .Meta.Page .Meta.TotalPages}}
+            <button hx-get="/api/products?page={{add .Meta.Page 1}}" 
+                    hx-target="#products-table"
+                    class="px-3 py-1 border rounded text-sm">
+                Next
+            </button>
+            {{end}}
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="productModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <h3 class="text-lg font-medium text-gray-900" id="modal-title">Add Product</h3>
+            <form id="productForm" class="mt-4">
+                <input type="hidden" id="productId" name="id">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Name</label>
+                    <input type="text" id="productName" name="name" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Price</label>
+                    <input type="number" id="productPrice" name="price" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Stock</label>
+                    <input type="number" id="productStock" name="stock" required
+                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" onclick="hideModal()"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200">
+                        Cancel
+                    </button>
+                    <button type="submit"
+                        class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
+                        Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showAddModal() {
+        document.getElementById('modal-title').textContent = 'Add Product';
+        document.getElementById('productId').value = '';
+        document.getElementById('productName').value = '';
+        document.getElementById('productPrice').value = '';
+        document.getElementById('productStock').value = '';
+        document.getElementById('productModal').classList.remove('hidden');
+    }
+
+    function showEditModal(id) {
+        document.getElementById('modal-title').textContent = 'Edit Product';
+        // Fetch product details and populate form
+        fetch(`/api/products/${id}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('productId').value = data.id;
+                document.getElementById('productName').value = data.name;
+                document.getElementById('productPrice').value = data.price;
+                document.getElementById('productStock').value = data.stock;
+                document.getElementById('productModal').classList.remove('hidden');
+            });
+    }
+
+    function hideModal() {
+        document.getElementById('productModal').classList.add('hidden');
+    }
+
+    function deleteProduct(id) {
+        if (confirm('Are you sure you want to delete this product?')) {
+            fetch(`/api/products/${id}`, { method: 'DELETE' })
+                .then(() => {
+                    // Refresh the table
+                    htmx.trigger('#products-table', 'refresh');
+                });
+        }
+    }
+
+    document.getElementById('productForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = document.getElementById('productId').value;
+        const data = {
+            name: document.getElementById('productName').value,
+            price: parseFloat(document.getElementById('productPrice').value),
+            stock: parseInt(document.getElementById('productStock').value)
+        };
+
+        fetch(`/api/products${id ? '/' + id : ''}`, {
+            method: id ? 'PUT' : 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then(() => {
+            hideModal();
+            // Refresh the table
+            htmx.trigger('#products-table', 'refresh');
+        });
+    });
+</script> 

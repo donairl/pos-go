@@ -6,6 +6,7 @@
     <title>{{.Title}} - POS System</title>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 <body class="bg-gray-100">
     <nav class="bg-white shadow-lg">
@@ -13,16 +14,27 @@
             <div class="flex justify-between h-16">
                 <div class="flex">
                     <div class="flex-shrink-0 flex items-center">
-                        <a href="/" class="text-xl font-bold">POS System</a>
+                        <a href="/" class="text-xl font-bold text-indigo-600">POS System</a>
                     </div>
                     <div class="hidden md:ml-6 md:flex md:space-x-8">
-                        <a href="/products" class="inline-flex items-center px-1 pt-1 text-gray-900">Products</a>
-                        <a href="/transactions" class="inline-flex items-center px-1 pt-1 text-gray-900">Transactions</a>
-                        <a href="/reports" class="inline-flex items-center px-1 pt-1 text-gray-900">Reports</a>
+                        <a href="/products" class="inline-flex items-center px-1 pt-1 text-gray-900 hover:text-indigo-600">
+                            <i class="fas fa-box mr-2"></i> Products
+                        </a>
+                        <a href="/transactions" class="inline-flex items-center px-1 pt-1 text-gray-900 hover:text-indigo-600">
+                            <i class="fas fa-shopping-cart mr-2"></i> Transactions
+                        </a>
+                        <a href="/reports" class="inline-flex items-center px-1 pt-1 text-gray-900 hover:text-indigo-600">
+                            <i class="fas fa-chart-bar mr-2"></i> Reports
+                        </a>
                     </div>
                 </div>
-                <div class="flex items-center">
-                    <a href="/auth/logout" class="text-gray-900">Logout</a>
+                <div class="flex items-center space-x-4">
+                    <span class="text-gray-700">
+                        <i class="fas fa-user mr-2"></i>{{.Username}}
+                    </span>
+                    <a href="/auth/logout" class="text-red-600 hover:text-red-800">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                    </a>
                 </div>
             </div>
         </div>
@@ -31,5 +43,15 @@
     <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         {{embed}}
     </main>
+
+    <script>
+        // Handle HTMX loading states
+        document.body.addEventListener('htmx:beforeRequest', function(evt) {
+            evt.detail.elt.classList.add('opacity-50');
+        });
+        document.body.addEventListener('htmx:afterRequest', function(evt) {
+            evt.detail.elt.classList.remove('opacity-50');
+        });
+    </script>
 </body>
 </html> 
