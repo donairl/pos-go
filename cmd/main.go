@@ -24,7 +24,9 @@ func main() {
 	// Initialize database
 	config.ConnectDB()
 
-	engine := html.New("./views", ".html")
+	// Setup template engine
+	engine := html.New("../views", ".html")
+
 	app := fiber.New(fiber.Config{
 		Views: engine,
 	})
@@ -63,10 +65,30 @@ func setupRoutes(app *fiber.App,
 	productHandler *handler.ProductHandler,
 	transactionHandler *handler.TransactionHandler) {
 
+	// Public routes
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.Render("layouts/main", fiber.Map{
-			"Title": "POS System",
-		})
+		return c.Render("dashboard/index", fiber.Map{
+			"Title": "Dashboard",
+		}, "layouts/main")
+	})
+
+	// View routes
+	app.Get("/products", func(c *fiber.Ctx) error {
+		return c.Render("products/index", fiber.Map{
+			"Title": "Products",
+		}, "layouts/main")
+	})
+
+	app.Get("/transactions", func(c *fiber.Ctx) error {
+		return c.Render("transactions/index", fiber.Map{
+			"Title": "Transactions",
+		}, "layouts/main")
+	})
+
+	app.Get("/reports", func(c *fiber.Ctx) error {
+		return c.Render("reports/index", fiber.Map{
+			"Title": "Reports",
+		}, "layouts/main")
 	})
 
 	// Auth routes
@@ -75,7 +97,7 @@ func setupRoutes(app *fiber.App,
 	auth.Post("/login", authHandler.Login)
 	auth.Get("/logout", authHandler.Logout)
 
-	// Protected routes
+	// Protected API routes
 	api := app.Group("/api", middleware.Protected())
 
 	// Product routes

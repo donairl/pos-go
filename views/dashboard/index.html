@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Quick Actions -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Quick Actions</h2>
+        <div class="space-y-4">
+            <a href="/transactions" class="block p-4 border rounded-lg hover:bg-indigo-50">
+                <div class="flex items-center">
+                    <div class="p-2 bg-indigo-100 rounded-full">
+                        <i class="fas fa-shopping-cart text-indigo-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium">New Transaction</h3>
+                        <p class="text-sm text-gray-500">Create a new sales transaction</p>
+                    </div>
+                </div>
+            </a>
+            <a href="/products" class="block p-4 border rounded-lg hover:bg-indigo-50">
+                <div class="flex items-center">
+                    <div class="p-2 bg-indigo-100 rounded-full">
+                        <i class="fas fa-box text-indigo-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium">Manage Products</h3>
+                        <p class="text-sm text-gray-500">View and manage inventory</p>
+                    </div>
+                </div>
+            </a>
+            <a href="/reports" class="block p-4 border rounded-lg hover:bg-indigo-50">
+                <div class="flex items-center">
+                    <div class="p-2 bg-indigo-100 rounded-full">
+                        <i class="fas fa-chart-bar text-indigo-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-medium">View Reports</h3>
+                        <p class="text-sm text-gray-500">Check sales and analytics</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- Today's Summary -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Today's Summary</h2>
+        <div class="space-y-4">
+            <div class="p-4 bg-green-50 rounded-lg">
+                <div class="flex items-center">
+                    <div class="p-2 bg-green-100 rounded-full">
+                        <i class="fas fa-dollar-sign text-green-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500">Sales</p>
+                        <h3 class="text-xl font-medium text-green-600" id="today-sales">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 bg-blue-50 rounded-lg">
+                <div class="flex items-center">
+                    <div class="p-2 bg-blue-100 rounded-full">
+                        <i class="fas fa-receipt text-blue-600"></i>
+                    </div>
+                    <div class="ml-4">
+                        <p class="text-sm text-gray-500">Transactions</p>
+                        <h3 class="text-xl font-medium text-blue-600" id="today-transactions">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    <div class="bg-white shadow rounded-lg p-6">
+        <h2 class="text-lg font-medium text-gray-900 mb-4">Low Stock Alert</h2>
+        <div id="low-stock-list" class="space-y-2">
+            <!-- Low stock items will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<script>
+    // Load dashboard data
+    function loadDashboardData() {
+        // Load today's sales
+        fetch('/api/reports/sales?type=daily')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('today-sales').textContent = data.total.toFixed(2);
+                document.getElementById('today-transactions').textContent = data.count;
+            });
+
+        // Load low stock products
+        fetch('/api/products?stock_below=10')
+            .then(response => response.json())
+            .then(data => {
+                const lowStockList = document.getElementById('low-stock-list');
+                if (data.data.length === 0) {
+                    lowStockList.innerHTML = '<p class="text-gray-500">No low stock items</p>';
+                    return;
+                }
+                lowStockList.innerHTML = data.data.map(product => `
+                    <div class="flex justify-between items-center p-2 border rounded">
+                        <div>
+                            <h4 class="font-medium">${product.name}</h4>
+                            <p class="text-sm text-red-600">Stock: ${product.stock}</p>
+                        </div>
+                        <a href="/products" class="text-indigo-600 hover:text-indigo-900">
+                            <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                `).join('');
+            });
+    }
+
+    // Load initial data
+    loadDashboardData();
+</script> 

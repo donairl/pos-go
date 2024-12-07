@@ -6,6 +6,7 @@ import (
 	"os"
 	"pos-go/internal/domain"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -37,4 +38,29 @@ func ConnectDB() {
 
 	DB = db
 	log.Println("Database connected successfully")
+
+	// Seed default admin user
+	seedAdminUser()
+}
+
+func seedAdminUser() {
+	var user domain.User
+	if err := DB.Where("username = ?", "admin").First(&user).Error; err != nil {
+		// User doesn't exist, create it
+		hashedPassword, err := bcrypt.GenerateFromPassword([]byte("admin4321"), bcrypt.DefaultCost)
+		if err != nil {
+			log.Fatal("Failed to hash password:", err)
+		}
+
+		adminUser := domain.User{
+			Username: "admin",
+			Password: string(hashedPassword),
+			Role:     domain.RoleAdmin,
+		}
+
+		if err := DB.Create(&adminUser).Error; err != nil {
+			log.Fatal("Failed to create admin user:", err)
+		}
+		log.Println("Default admin user created successfully")
+	}
 }
