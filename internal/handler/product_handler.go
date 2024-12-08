@@ -25,11 +25,30 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 	page, _ := strconv.Atoi(c.Query("page", "1"))
 	limit, _ := strconv.Atoi(c.Query("limit", "10"))
 	search := c.Query("search", "")
+	stockBelow, _ := strconv.Atoi(c.Query("stock_below", "0"))
+
+	// Create context with stock filter if provided
+	ctx := c.Context()
+	if stockBelow > 0 {
+		ctx.SetUserValue("stock_below", stockBelow)
+	}
 
 	products, total, err := h.productService.GetProducts(page, limit, search)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error": err.Error(),
+		})
+	}
+
+	// If it's an API request, return JSON
+	if c.Get("Accept") == "application/json" || c.Get("HX-Request") == "true" {
+		return c.JSON(fiber.Map{
+			"data": products,
+			"meta": fiber.Map{
+				"page":  page,
+				"limit": limit,
+				"total": total,
+			},
 		})
 	}
 

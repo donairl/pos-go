@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"pos-go/internal/domain"
 	"time"
 
@@ -57,7 +58,33 @@ func (r *transactionRepository) GetTransactionByID(id uint) (*domain.Transaction
 }
 
 func (r *transactionRepository) Create(transaction *domain.Transaction) error {
-	return r.db.Create(transaction).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		// Create the transaction first
+		if err := tx.Create(transaction).Error; err != nil {
+			return err
+		}
+
+		// Update stock for each item
+		for _, item := range transaction.Items {
+			// Get current product
+			var product domain.Product
+			if err := tx.First(&product, item.ProductID).Error; err != nil {
+				return err
+			}
+
+			// Check if enough stock
+			if product.Stock < item.Quantity {
+				return fmt.Errorf("insufficient stock for product %s: have %d, need %d", product.Name, product.Stock, item.Quantity)
+			}
+
+			// Update stock
+			if err := tx.Model(&product).Update("stock", product.Stock-item.Quantity).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
 
 func (r *transactionRepository) GetDailySales(date time.Time) (float64, int64, error) {

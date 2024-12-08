@@ -98,7 +98,11 @@
             });
 
         // Load low stock products
-        fetch('/api/products?stock_below=10')
+        fetch('/api/products?stock_below=10', {
+            headers: {
+                'Accept': 'application/json'
+            }
+        })
             .then(response => response.json())
             .then(response => {
                 console.log('Low stock response:', response);

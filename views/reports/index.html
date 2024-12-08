@@ -84,7 +84,9 @@
         // Load daily sales
         fetch('/api/reports/sales?type=daily')
             .then(response => response.json())
-            .then(data => {
+            .then(response => {
+                console.log('Sales response:', response);
+                const data = response.data;
                 document.getElementById('daily-total').textContent = data.total.toFixed(2);
                 document.getElementById('daily-count').textContent = `${data.count} transactions`;
             });
@@ -92,7 +94,9 @@
         // Load monthly sales
         fetch('/api/reports/sales?type=monthly')
             .then(response => response.json())
-            .then(data => {
+            .then(response => {
+                console.log('Monthly Sales response:', response);
+                const data = response.data;
                 document.getElementById('monthly-total').textContent = data.total.toFixed(2);
                 document.getElementById('monthly-count').textContent = `${data.count} transactions`;
             });
@@ -104,8 +108,13 @@
                 const tbody = document.getElementById('transactions-table');
                 tbody.innerHTML = data.data.map(transaction => `
                     <tr>
-                        <td class="px-6 py-4 whitespace-nowrap">${new Date(transaction.transaction_date).toLocaleString()}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${transaction.id}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">${new Date(transaction.transaction_date).toLocaleString('id-ID', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        })}</td>
+                        
                         <td class="px-6 py-4 whitespace-nowrap">${transaction.total.toFixed(2)}</td>
                         <td class="px-6 py-4 whitespace-nowrap">${transaction.payment_method}</td>
                         <td class="px-6 py-4 whitespace-nowrap">

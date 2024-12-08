@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"pos-go/internal/domain"
@@ -87,12 +89,42 @@ func (h *TransactionHandler) CreateTransaction(c *fiber.Ctx) error {
 		})
 	}
 
+	// Set user ID and transaction date
 	transaction.UserID = c.Locals("userID").(uint)
 	transaction.TransactionDate = time.Now()
 
+	// Calculate total
+	var total float64
+	for i, item := range transaction.Items {
+		// Get product to verify price and stock
+		product, err := h.productService.GetProductByID(item.ProductID)
+		if err != nil {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": fmt.Sprintf("Product not found for item %d", i+1),
+			})
+		}
+
+		// Set product price at time of transaction
+		item.Price = product.Price
+		item.Subtotal = product.Price * float64(item.Quantity)
+		total += item.Subtotal
+
+		// Update the item in the slice
+		transaction.Items[i] = item
+	}
+
+	// Set transaction total
+	transaction.Total = total
+
 	if err := h.transactionService.CreateTransaction(&transaction); err != nil {
+		// Check if it's a stock-related error
+		if strings.Contains(err.Error(), "insufficient stock") {
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+				"error": err.Error(),
+			})
+		}
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"error": err.Error(),
+			"error": "Failed to create transaction",
 		})
 	}
 

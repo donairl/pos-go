@@ -26,11 +26,18 @@ func (r *productRepository) GetProducts(page, limit int, search string) ([]domai
 	var products []domain.Product
 	var total int64
 
-	query := r.db.Model(&domain.Product{})
+	query := r.db.Model(&domain.Product{}).Preload("Category")
 
 	// Apply search filter if provided
 	if search != "" {
 		query = query.Where("name ILIKE ?", "%"+search+"%")
+	}
+
+	// Apply stock filter if provided
+	if stockBelow := r.db.Statement.Context.Value("stock_below"); stockBelow != nil {
+		if limit, ok := stockBelow.(int); ok {
+			query = query.Where("stock < ?", limit)
+		}
 	}
 
 	// Get total count before pagination
@@ -42,15 +49,6 @@ func (r *productRepository) GetProducts(page, limit int, search string) ([]domai
 	offset := (page - 1) * limit
 	if err := query.Offset(offset).Limit(limit).Find(&products).Error; err != nil {
 		return nil, 0, err
-	}
-
-	// Debug log
-	if len(products) == 0 {
-		// Try to get all products without pagination to check if there's any data
-		var allProducts []domain.Product
-		if err := r.db.Model(&domain.Product{}).Find(&allProducts).Error; err != nil {
-			return nil, 0, err
-		}
 	}
 
 	return products, total, nil
