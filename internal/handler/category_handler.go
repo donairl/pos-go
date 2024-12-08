@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"strconv"
 
 	"pos-go/internal/domain"
@@ -29,15 +30,19 @@ func (h *CategoryHandler) GetCategories(c *fiber.Ctx) error {
 			"error": err.Error(),
 		})
 	}
+	totalPages := (total + int64(limit) - 1) / int64(limit)
 
-	return c.JSON(fiber.Map{
-		"data": categories,
-		"meta": fiber.Map{
-			"page":  page,
-			"limit": limit,
-			"total": total,
+	log.Printf("Page: %d, Limit: %d, Total: %d, TotalPages: %d", page, limit, total, totalPages)
+
+	return c.Render("categories/index", fiber.Map{
+		"Categories": categories,
+		"Meta": fiber.Map{
+			"Page":       page,
+			"Limit":      limit,
+			"Total":      total,
+			"TotalPages": totalPages,
 		},
-	})
+	}, "layouts/main")
 }
 
 func (h *CategoryHandler) GetCategory(c *fiber.Ctx) error {

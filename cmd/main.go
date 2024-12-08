@@ -16,14 +16,32 @@ import (
 	"github.com/joho/godotenv"
 )
 
-// Define the subtract function
+// Define template functions
 func subtract(a, b int) int {
 	return a - b
 }
 
-// Define the addx function
-func addx(a, b int) int {
+func add(a, b int) int {
 	return a + b
+}
+
+func multiply(a, b int) int {
+	return a * b
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
+func iterate(start, end int) []int {
+	var result []int
+	for i := start; i <= end; i++ {
+		result = append(result, i)
+	}
+	return result
 }
 
 func main() {
@@ -37,11 +55,14 @@ func main() {
 	log.Println("JWT_SECRET_KEY:", os.Getenv("JWT_SECRET_KEY"))
 
 	// Create a new HTML template engine
-	engine := html.New("../views", ".html")
+	engine := html.New("./views", ".html")
 
-	// Register the subtract and addx functions with the template engine
+	// Register template functions
 	engine.AddFunc("subtract", subtract)
-	engine.AddFunc("addx", addx)
+	engine.AddFunc("add", add)
+	engine.AddFunc("multiply", multiply)
+	engine.AddFunc("min", min)
+	engine.AddFunc("iterate", iterate)
 
 	app := fiber.New(fiber.Config{
 		Views: engine,
@@ -65,7 +86,7 @@ func main() {
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService)
-	productHandler := handler.NewProductHandler(productService)
+	productHandler := handler.NewProductHandler(productService, categoryService)
 	transactionHandler := handler.NewTransactionHandler(transactionService, productService)
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 

@@ -9,7 +9,13 @@ Berikut adalah **requirement** untuk pengembangan sistem **Point of Sales (POS)*
 - **Hapus Produk**: Soft delete (dengan flag `is_deleted`) agar data tetap aman.
 - **Daftar Produk**: Tabel produk dengan pagination, pencarian, dan filter.
 
-### **b. Transaksi Penjualan**
+### **b. Manajemen Kategori**
+- **Tambah Kategori**: Input data kategori (nama).
+- **Edit Kategori**: Update data kategori yang sudah ada.
+- **Hapus Kategori**: Soft delete (dengan flag `is_deleted`) agar data tetap aman.
+- **Daftar Kategori**: Tabel kategori dengan pagination, pencarian, dan filter.
+
+### **c. Transaksi Penjualan**
 - **Tambah Item ke Transaksi**: Pilih produk berdasarkan nama/kode (dengan autocomplete HTMX).
 - **Keranjang**: Tampilkan daftar item yang ditambahkan, termasuk subtotal per item, kuantitas, dan total harga.
 - **Pembayaran**:

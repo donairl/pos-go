@@ -84,21 +84,31 @@
         // Load today's sales
         fetch('/api/reports/sales?type=daily')
             .then(response => response.json())
-            .then(data => {
-                document.getElementById('today-sales').textContent = data.total.toFixed(2);
+            .then(response => {
+                console.log('Sales response:', response);
+                const data = response.data;
+                document.getElementById('today-sales').textContent = data.total.toLocaleString('en-US', {
+                    style: 'currency',
+                    currency: 'USD'
+                });
                 document.getElementById('today-transactions').textContent = data.count;
+            })
+            .catch(error => {
+                console.error('Error loading sales data:', error);
             });
 
         // Load low stock products
         fetch('/api/products?stock_below=10')
             .then(response => response.json())
-            .then(data => {
+            .then(response => {
+                console.log('Low stock response:', response);
+                const products = response.data;
                 const lowStockList = document.getElementById('low-stock-list');
-                if (data.data.length === 0) {
+                if (!products || products.length === 0) {
                     lowStockList.innerHTML = '<p class="text-gray-500">No low stock items</p>';
                     return;
                 }
-                lowStockList.innerHTML = data.data.map(product => `
+                lowStockList.innerHTML = products.map(product => `
                     <div class="flex justify-between items-center p-2 border rounded">
                         <div>
                             <h4 class="font-medium">${product.name}</h4>
@@ -109,9 +119,17 @@
                         </a>
                     </div>
                 `).join('');
+            })
+            .catch(error => {
+                console.error('Error loading low stock data:', error);
+                document.getElementById('low-stock-list').innerHTML = 
+                    '<p class="text-red-500">Error loading low stock items</p>';
             });
     }
 
     // Load initial data
     loadDashboardData();
+
+    // Refresh data every 5 minutes
+    setInterval(loadDashboardData, 5 * 60 * 1000);
 </script> 

@@ -70,9 +70,14 @@ func (r *transactionRepository) GetDailySales(date time.Time) (float64, int64, e
 	err := r.db.Model(&domain.Transaction{}).
 		Where("transaction_date BETWEEN ? AND ?", startOfDay, endOfDay).
 		Select("COALESCE(SUM(total), 0) as total, COUNT(*) as count").
-		Row().Scan(&total, &count)
+		Row().
+		Scan(&total, &count)
 
-	return total, count, err
+	if err != nil {
+		return 0, 0, err
+	}
+
+	return total, count, nil
 }
 
 func (r *transactionRepository) GetMonthlySales(year int, month time.Month) (float64, int64, error) {

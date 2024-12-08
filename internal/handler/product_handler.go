@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"log"
 	"strconv"
 
 	"pos-go/internal/domain"
@@ -11,12 +10,14 @@ import (
 )
 
 type ProductHandler struct {
-	productService service.ProductService
+	productService  service.ProductService
+	categoryService service.CategoryService
 }
 
-func NewProductHandler(productService service.ProductService) *ProductHandler {
+func NewProductHandler(productService service.ProductService, categoryService service.CategoryService) *ProductHandler {
 	return &ProductHandler{
-		productService: productService,
+		productService:  productService,
+		categoryService: categoryService,
 	}
 }
 
@@ -32,16 +33,25 @@ func (h *ProductHandler) GetProducts(c *fiber.Ctx) error {
 		})
 	}
 
-	totalPages := (total + int64(limit) - 1) / int64(limit)
+	// Get all categories for the dropdown
+	categories, _, err := h.categoryService.GetCategories(1, 100)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": err.Error(),
+		})
+	}
 
-	log.Printf("Page: %d, Limit: %d, Total: %d, TotalPages: %d", page, limit, total, totalPages)
+	// Calculate total pages
+	totalPages := (int(total) + limit - 1) / limit
 
 	return c.Render("products/index", fiber.Map{
-		"Products": products,
+		"Title":      "Products",
+		"Products":   products,
+		"Categories": categories,
 		"Meta": fiber.Map{
 			"Page":       page,
 			"Limit":      limit,
-			"Total":      total,
+			"Total":      int(total),
 			"TotalPages": totalPages,
 		},
 	}, "layouts/main")
