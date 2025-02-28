@@ -48,6 +48,14 @@ func seedDatabase() {
 		DB.Create(&adminUser)
 	}
 
+	//create another user
+	newUser := domain.User{
+		Username: "donny",
+		Password: "$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa", // newuser4321
+		Role:     "customer",
+	}
+	DB.Create(&newUser)
+
 	// Seed default categories if they don't exist
 	categories := []domain.Category{
 		{Name: "Electronics"},
