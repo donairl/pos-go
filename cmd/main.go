@@ -55,7 +55,7 @@ func main() {
 	log.Println("JWT_SECRET_KEY:", os.Getenv("JWT_SECRET_KEY"))
 
 	// Create a new HTML template engine
-	engine := html.New("./views", ".html")
+	engine := html.New("../views", ".html")
 
 	// Register template functions
 	engine.AddFunc("subtract", subtract)
