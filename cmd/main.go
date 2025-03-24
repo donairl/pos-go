@@ -133,8 +133,13 @@ func setupRoutes(app *fiber.App,
 	// Protected API routes
 	api := app.Group("/api", middleware.Protected())
 
-	// Category routes
+	// Feature-specific route groups
 	categories := api.Group("/categories")
+	products := api.Group("/products")
+	transactions := api.Group("/transactions")
+	reports := api.Group("/reports")
+
+	// Category routes
 	categories.Get("/", categoryHandler.GetCategories)
 	categories.Post("/", categoryHandler.CreateCategory)
 	categories.Get("/:id", categoryHandler.GetCategory)
@@ -142,7 +147,6 @@ func setupRoutes(app *fiber.App,
 	categories.Delete("/:id", categoryHandler.DeleteCategory)
 
 	// Product routes
-	products := api.Group("/products")
 	products.Get("/", productHandler.GetProducts)
 	products.Post("/", productHandler.CreateProduct)
 	products.Get("/:id", productHandler.GetProduct)
@@ -150,13 +154,11 @@ func setupRoutes(app *fiber.App,
 	products.Delete("/:id", productHandler.DeleteProduct)
 
 	// Transaction routes
-	transactions := api.Group("/transactions")
 	transactions.Get("/", transactionHandler.GetTransactions)
 	transactions.Post("/", transactionHandler.CreateTransaction)
 	transactions.Get("/:id", transactionHandler.GetTransaction)
 
 	// Report routes
-	reports := api.Group("/reports")
 	reports.Get("/sales", transactionHandler.GetSalesReport)
 	reports.Get("/export", transactionHandler.ExportSalesReport)
 }
