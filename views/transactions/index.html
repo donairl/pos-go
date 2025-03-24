@@ -181,6 +181,8 @@
             // Reset payment fields
             document.getElementById('payment-amount').value = '';
             document.getElementById('payment-method').value = 'cash';
+            //refresh page
+            window.location.reload();
         })
         .catch(error => {
             console.error('Error:', error);
