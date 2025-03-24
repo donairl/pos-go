@@ -51,6 +51,7 @@
                 if (data.success) {
                     // Store token in localStorage
                     localStorage.setItem('jwt_token', data.token);
+                    console.log('Token:', data.token);
                     // Redirect to dashboard
                     window.location.href = '/';
                 } else {
