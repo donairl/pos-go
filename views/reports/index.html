@@ -81,8 +81,14 @@
 <script>
     // Load summary data
     function loadSummary() {
+        const jwtToken = localStorage.getItem('jwt');
+
         // Load daily sales
-        fetch('/api/reports/sales?type=daily')
+        fetch('/api/reports/sales?type=daily', {
+            headers: {
+                'Authorization': `Bearer ${jwtToken}`
+            }
+        })
             .then(response => response.json())
             .then(response => {
                 console.log('Sales response:', response);
@@ -92,7 +98,11 @@
             });
 
         // Load monthly sales
-        fetch('/api/reports/sales?type=monthly')
+        fetch('/api/reports/sales?type=monthly', {
+            headers: {
+                'Authorization': `Bearer ${jwtToken}`
+            }
+        })
             .then(response => response.json())
             .then(response => {
                 console.log('Monthly Sales response:', response);
@@ -102,7 +112,11 @@
             });
 
         // Load recent transactions
-        fetch('/api/transactions')
+        fetch('/api/transactions', {
+            headers: {
+                'Authorization': `Bearer ${jwtToken}`
+            }
+        })
             .then(response => response.json())
             .then(data => {
                 const tbody = document.getElementById('transactions-table');

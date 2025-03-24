@@ -38,7 +38,7 @@
                     <span class="text-gray-700">
                         <i class="fas fa-user mr-2"></i>{{.Username}}
                     </span>
-                    <a href="/auth/logout" class="text-red-600 hover:text-red-800">
+                    <a href="/auth/logout" onclick="handleLogout(event)" class="text-red-600 hover:text-red-800">
                         <i class="fas fa-sign-out-alt mr-2"></i>Logout
                     </a>
                 </div>
@@ -58,6 +58,62 @@
         document.body.addEventListener('htmx:afterRequest', function(evt) {
             evt.detail.elt.classList.remove('opacity-50');
         });
+    </script>
+
+    <script>
+    // Get JWT token from localStorage or cookie
+    function getJWTToken() {
+        // First try localStorage
+        const localToken = localStorage.getItem('jwt_token');
+        if (localToken) {
+            return localToken;
+        }
+        
+        // Fallback to cookie
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; jwt=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return null;
+    }
+
+    // Add JWT token to all fetch requests
+    function fetchWithAuth(url, options = {}) {
+        const token = getJWTToken();
+        if (!options.headers) {
+            options.headers = {};
+        }
+        if (token) {
+            options.headers['Authorization'] = 'Bearer ' + token;
+        }
+        return fetch(url, options);
+    }
+
+    // Add JWT token to all HTMX requests
+    document.body.addEventListener('htmx:configRequest', function(evt) {
+        const token = getJWTToken();
+        if (token) {
+            evt.detail.headers['Authorization'] = 'Bearer ' + token;
+        }
+    });
+
+    // Handle unauthorized responses
+    document.body.addEventListener('htmx:responseError', function(evt) {
+        if (evt.detail.xhr.status === 401) {
+            // Clear token and redirect to login
+            localStorage.removeItem('jwt_token');
+            window.location.href = '/auth/login';
+        }
+    });
+    </script>
+
+    <script>
+    function handleLogout(event) {
+        event.preventDefault();
+        // Clear localStorage
+        localStorage.removeItem('jwt_token');
+        // Redirect to logout URL
+        window.location.href = '/auth/logout';
+    }
     </script>
 </body>
 </html> 

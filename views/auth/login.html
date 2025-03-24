@@ -10,7 +10,7 @@
 <body class="bg-gray-100 h-screen flex items-center justify-center">
     <div class="bg-white p-8 rounded-lg shadow-md w-96">
         <h1 class="text-2xl font-bold mb-6 text-center">Login</h1>
-        <form hx-post="/auth/login" hx-swap="outerHTML" class="space-y-4">
+        <form id="loginForm" class="space-y-4">
             <div>
                 <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
                 <input type="text" id="username" name="username" required
@@ -30,14 +30,38 @@
     </div>
 
     <script>
-        document.body.addEventListener('htmx:afterRequest', function(evt) {
-            if (evt.detail.successful) {
-                window.location.href = '/';
-            } else {
-                const errorMessage = document.getElementById('error-message');
-                errorMessage.textContent = evt.detail.xhr.response.error || 'An error occurred';
-                errorMessage.classList.remove('hidden');
-            }
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            fetch('/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Store token in localStorage
+                    localStorage.setItem('jwt_token', data.token);
+                    // Redirect to dashboard
+                    window.location.href = '/';
+                } else {
+                    // Show error message
+                    alert(data.error || 'Login failed');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred during login');
+            });
         });
     </script>
 </body>

@@ -14,6 +14,7 @@ import (
 type UserService interface {
 	Login(username, password string) (string, error)
 	GetUsers(page, limit int) ([]domain.User, int64, error)
+	CreateUser(user *domain.User) error
 }
 
 type userService struct {
@@ -49,4 +50,29 @@ func (s *userService) Login(username, password string) (string, error) {
 
 func (s *userService) GetUsers(page, limit int) ([]domain.User, int64, error) {
 	return s.userRepo.GetUsers(page, limit)
+}
+
+func (s *userService) CreateUser(user *domain.User) error {
+	// Check if username already exists
+	existingUser, err := s.userRepo.FindByUsername(user.Username)
+	if err == nil && existingUser != nil {
+		return errors.New("username already exists")
+	}
+
+	// Hash the password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return errors.New("failed to hash password")
+	}
+
+	// Set the hashed password
+	user.Password = string(hashedPassword)
+
+	// If role is not set, set default role as "customer"
+	if user.Role == "" {
+		user.Role = "customer"
+	}
+
+	// Create the user
+	return s.userRepo.Create(user)
 }

@@ -6,8 +6,11 @@ import (
 	"os"
 	"pos-go/internal/domain"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var DB *gorm.DB
@@ -22,7 +25,7 @@ func ConnectDB() {
 		os.Getenv("DB_PORT"),
 	)
 
-	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Info)})
 	if err != nil {
 		log.Fatal("Failed to connect to database. \n", err)
 	}
@@ -36,22 +39,41 @@ func ConnectDB() {
 	seedDatabase()
 }
 
+// GeneratePassword hashes a password using bcrypt
+func GeneratePassword(password string) (string, error) {
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedPassword), nil
+}
+
 func seedDatabase() {
 	// Seed admin user if it doesn't exist
 	var adminUser domain.User
 	if err := DB.Where("username = ?", "admin").First(&adminUser).Error; err != nil {
+		adminPassword, err := GeneratePassword("admin4321")
+		if err != nil {
+			log.Fatal("Failed to generate admin password: ", err)
+		}
+
 		adminUser = domain.User{
 			Username: "admin",
-			Password: "$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa", // admin4321
+			Password: adminPassword,
 			Role:     "admin",
 		}
 		DB.Create(&adminUser)
 	}
 
-	//create another user
+	// Create another user
+	userPassword, err := GeneratePassword("newuser4321")
+	if err != nil {
+		log.Fatal("Failed to generate user password: ", err)
+	}
+
 	newUser := domain.User{
 		Username: "donny",
-		Password: "$2a$10$vI8aWBnW3fID.ZQ4/zo1G.q1lRps.9cGLcZEiGDMVr5yUP1KUOYTa", // newuser4321
+		Password: userPassword,
 		Role:     "customer",
 	}
 	DB.Create(&newUser)
@@ -84,31 +106,31 @@ func seedDatabase() {
 
 		products := []domain.Product{
 			{
-				Name:       "Laptop",
+				Name:       "Apple MacBook Pro M3 - 14 inch",
 				Price:      999.99,
 				Stock:      10,
 				CategoryID: electronicsCategory.ID,
 			},
 			{
-				Name:       "Smartphone",
+				Name:       "Samsung Brand Smartphone M-50",
 				Price:      499.99,
 				Stock:      20,
 				CategoryID: electronicsCategory.ID,
 			},
 			{
-				Name:       "Tablet",
+				Name:       "Amazon Brand Tablet",
 				Price:      299.99,
 				Stock:      15,
 				CategoryID: electronicsCategory.ID,
 			},
 			{
-				Name:       "Orange Juice",
+				Name:       "Generic Orange Juice",
 				Price:      2.29,
 				Stock:      50,
 				CategoryID: foodCategory.ID,
 			},
 			{
-				Name:       "Mineral Water ABC",
+				Name:       "Mineral Water ABC - 500ml",
 				Price:      1.99,
 				Stock:      100,
 				CategoryID: foodCategory.ID,

@@ -48,12 +48,15 @@ func (h *AuthHandler) Login(c *fiber.Ctx) error {
 	cookie.Name = "jwt"
 	cookie.Value = token
 	cookie.HTTPOnly = true
-	cookie.Secure = true // Enable in production
+	cookie.Secure = true
 	cookie.Path = "/"
 	c.Cookie(cookie)
 
+	// Return token in response for localStorage
 	return c.JSON(fiber.Map{
-		"token": token,
+		"success": true,
+		"token":   token,
+		"message": "Login successful",
 	})
 }
 
